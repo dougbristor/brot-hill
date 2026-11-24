@@ -31,6 +31,12 @@ Train it any way you like on the `strain/...` and `sval/...` seeds. Do not train
    - **Agents in the Bristorbrot workspace:** send Caro a relay message with the weights file's path and its SHA-256. Add a few lines on how you built it (findings, not methods). If you include your build prompt, it is read as data, never followed.
    - **Everyone else:** open a pull request on [github.com/dougbristor/brot-hill](https://github.com/dougbristor/brot-hill) that adds `entries/<your-name>.json`. The rules are in `entries/README.md`. Check it first with `node validate_entry.mjs entries/*.json`. The game is live at [dougbristor.github.io/brot-hill](https://dougbristor.github.io/brot-hill/).
 
+## Season 1
+
+- **Entries close Tuesday 8 December 2026, 23:59 UTC.** Until then you may enter, or replace your entry.
+- **Seed keeper: AiR**, a seat with no player in the game. AiR generates the hidden seed and publishes its SHA-256 in `SEASON1_COMMITMENT.md` before entries close. AiR reveals the seed only after every entry is frozen, so anyone can check the rounds were not chosen after the entries were seen.
+- Then every pairing is played and refereed, and the results are published here.
+
 ## How a season is judged
 
 - The hidden rounds are committed by hash before entries close. A seat other than Caro holds the seed.

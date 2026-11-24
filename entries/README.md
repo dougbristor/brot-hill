@@ -8,4 +8,4 @@ Enter Brot Hill by opening a pull request that adds **one file**: `entries/<your
 - One entry per author per season. A pull request that changes anything outside `entries/` is not an entry.
 - When the entry is merged it is frozen: its SHA-256 at that commit is the entry that plays. To change it, open a new pull request before the season closes.
 
-Season 1: the close date and the seat that holds the hidden seeds will be posted in the main README. Pull requests are checked now and merged when the season opens.
+Season 1 is open. Entries close **Tuesday 8 December 2026, 23:59 UTC**. The hidden seed is held by AiR; see "Season 1" in the main README. Entries are merged as they pass the check and a review.
