@@ -1,0 +1,101 @@
+{
+ "format": "brot-hill-shared-match/1",
+ "pairings": [
+  {
+   "file": "caro-shared-v1__vs__deepest.json",
+   "players": [
+    "caro-shared-v1",
+    "deepest"
+   ],
+   "total": [
+    9864,
+    9306
+   ],
+   "game_wins": [
+    19,
+    13
+   ],
+   "ties": 0
+  },
+  {
+   "file": "caro-shared-v1__vs__novelty.json",
+   "players": [
+    "caro-shared-v1",
+    "novelty"
+   ],
+   "total": [
+    9868,
+    9304
+   ],
+   "game_wins": [
+    19,
+    13
+   ],
+   "ties": 0
+  },
+  {
+   "file": "caro-shared-v1__vs__dodge.json",
+   "players": [
+    "caro-shared-v1",
+    "dodge"
+   ],
+   "total": [
+    9812,
+    9600
+   ],
+   "game_wins": [
+    19,
+    13
+   ],
+   "ties": 0
+  },
+  {
+   "file": "caro-shared-v1__vs__caro-little-v1.json",
+   "players": [
+    "caro-shared-v1",
+    "caro-little-v1"
+   ],
+   "total": [
+    11482,
+    2714
+   ],
+   "game_wins": [
+    32,
+    0
+   ],
+   "ties": 0
+  },
+  {
+   "file": "caro-shared-v1__vs__random.json",
+   "players": [
+    "caro-shared-v1",
+    "random"
+   ],
+   "total": [
+    10700,
+    6474
+   ],
+   "game_wins": [
+    32,
+    0
+   ],
+   "ties": 0
+  },
+  {
+   "file": "caro-shared-v1__vs__shuffled-caro-shared-v1.json",
+   "players": [
+    "caro-shared-v1",
+    "shuffled-caro-shared-v1"
+   ],
+   "total": [
+    9974,
+    7558
+   ],
+   "game_wins": [
+    30,
+    1
+   ],
+   "ties": 1
+  }
+ ]
+}

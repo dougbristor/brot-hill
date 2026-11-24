@@ -1,0 +1,68 @@
+# PKG-HILL-002-SHARED-FRUIT receipt (Caro, 2026-11-24)
+
+## Hashes (sha256)
+- `92dde71f30c24e1a6a41a7a579c5f75d2c7540d3e060e9d4005599aa8b845507`  PACKAGE.md
+- `05af98085098d9094e7125c41ffbfaae513d00942c200e75c0648487dc04e2ee`  tests/check_shared.sh
+- `8a1cd4abcebe6af248de2a88071984e8d9adbbee39064cfe6ff894bdc8ea5e17`  shared.mjs
+- `8cc94946c719c11a34ad8ae8af0213518a2f4a132dc521fa9b59f06204a2d744`  shared_policy.mjs
+- `66a15e5efe703a2adcfd91400398f3e70efde793c89f1bcfea7ebed780294186`  policy.mjs
+- `44521701ec0888e36d2815fec60ff5d13887180b942abdb2e59791ec0c32c57b`  hill.mjs
+- `c16a9d7499678b8f014d8244d7f51a11e0acb37b4c7cd0737287b0b6ecfe31a5`  referee_shared.py
+- `f56712e94e1b832b3ae6d2c2c9a18c8178cea7833cd7c91895503ec552b74b5f`  referee.py
+- `0149752d4393f9333c6c33b0174e02e3041c924962882bd881385fe968d7163e`  train_shared.mjs
+- `e7da7c05854b037d2e1b6f054aab0af96ccdd097840140c2180df527a72b830a`  play_shared.mjs
+- `f76c664cc0115006720ce37d091091bc7c88fa70bce75869ee9bb2f696309329`  shared_data.mjs
+- `3873251b99263d6d3dcebbfd1ece92cc59939658d51f850251bfaef9a491c613`  shared.html
+- `b9c0c41ce29d279d757e7dbaab1839dfd5b153955c7ae8cde2909470c9963ac3`  weights/caro_shared_v1.json
+- `bcde590838ecaa0063ee6c3645dd8c55b933c6805bf8f6cda344628193ee5935`  weights/caro_little_v1.json
+- `b14f74d3a2ee05c782157e63f3f64a3df53ec0d9ca793c47552099a0c486c73c`  SHARED_COMMITMENT.md
+
+## Custody
+- Commitment: sha256(nonce) = 96cc5fe00739427d54775506179cedad8477722c215d1ae7380a4b1581d44ee5, committed 2026-11-24T17:21:41Z, before any shared-fruit code ran (SHARED_COMMITMENT.md, which also fixed the acceptance rule).
+- Entry frozen: 2026-11-24T17:37:08Z frozen caro-shared-v1 weights/caro_shared_v1.json sha256 b9c0c41ce29d279d757e7dbaab1839dfd5b153955c7ae8cde2909470c9963ac3 (after PKG-HILL-002 acceptance PASS 5/5, plant FAIL 5/5; before the shared nonce was read)
+- Nonce revealed: `c474082d3021dd6661d3303676b4f571a15181325bdd6c361e399bbb70fad7a3`; sha256 checked equal to the commitment.
+- Procedural custody: the same seat trained the entry and held the nonce.
+
+## Training
+- antithetic ES, rank utilities, Adam; warm start from caro-little-v1 with a zero rival column; pool deepest, novelty, dodge, caro-little-v1; 150 generations, population 32, 174.6 s on one core.
+- Validation owned share: warm start 0.5015, chosen generation 149 float 0.6424, int8 0.642.
+
+## Acceptance (public scheck/0..15, both seat orders, 32 games per pairing)
+```
+== entry
+ok   referee selftest (9 plants)
+ok   caro-shared-v1 vs caro-little-v1: owned 11482 : 2714, games 32:0, refused 0, invalid [0, 0]
+ok   caro-shared-v1 vs deepest: owned 9864 : 9306, games 19:13, refused 0, invalid [0, 0]
+ok   caro-shared-v1 vs dodge: owned 9812 : 9600, games 19:13, refused 0, invalid [0, 0]
+ok   caro-shared-v1 vs novelty: owned 9868 : 9304, games 19:13, refused 0, invalid [0, 0]
+ok   caro-shared-v1 vs shuffled-caro-shared-v1: owned 9974 : 7558, games 30:1, refused 0, invalid [0, 0]
+PASS
+exit 0
+== plant (shuffled weights, must FAIL)
+ok   referee selftest (9 plants)
+FAIL shuffled-caro-shared-v1 vs caro-little-v1: owned 7190 : 9808, games 5:27, refused 0, invalid [0, 0]
+FAIL shuffled-caro-shared-v1 vs deepest: owned 7400 : 9792, games 2:30, refused 0, invalid [0, 0]
+FAIL shuffled-caro-shared-v1 vs dodge: owned 7762 : 9630, games 2:30, refused 0, invalid [0, 0]
+FAIL shuffled-caro-shared-v1 vs novelty: owned 7394 : 9784, games 2:30, refused 0, invalid [0, 0]
+FAIL shuffled-caro-shared-v1 vs shuffled-caro-shared-v1: owned 7684 : 7684, games 16:16, refused 0, invalid [0, 0]
+FAIL (5 criteria)
+exit 1
+
+[exited with code 0]
+```
+
+## Hidden set (shared/<nonce>/0..15, both seat orders, 32 games per pairing; exact referee)
+
+| pairing | owned (exact) | share | games won · tied · lost | invalid |
+|---|---|---|---|---|
+| vs deepest | 10250 : 7700 | 0.571 | 32 · 0 · 0 | 0 · 0 |
+| vs novelty | 10252 : 7710 | 0.571 | 32 · 0 · 0 | 0 · 0 |
+| vs dodge | 9924 : 9066 | 0.523 | 29 · 0 · 3 | 0 · 0 |
+| vs caro-little-v1 | 11146 : 2004 | 0.848 | 32 · 0 · 0 | 0 · 0 |
+| vs random | 10596 : 6584 | 0.617 | 32 · 0 · 0 | 0 · 0 |
+| vs shuffled-caro-shared-v1 | 10210 : 7318 | 0.582 | 32 · 0 · 0 | 0 · 0 |
+
+One-sided sign test on games: 32/32 gives p = 2.3e-10; 29/32 (vs dodge) gives p = 1.3e-06. Refused games: 0 in every pairing.
+
+## Page
+shared.html (http://localhost:8088/caro/brot_hill/shared.html): in headless pwcmd Firefox on the GTX 980, all 192 finished boards on the hidden set and all 192 on the check set equal the referee's owned counts. A swapped-scores plant mismatched 191/192 on the check set (the exception is one tied game). No console errors.

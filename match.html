@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brot Hill · match replay</title>
+<style>
+:root{--bg:#0d1219;--panel:#141b25;--line:#243041;--text:#dde5ee;--muted:#8e9cae;--entry:#ffa94d;--opp:#6cc6ff;--both:#c6ced8;--tie:#56637a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:20px 20px 40px}
+h1{font-size:20px;font-weight:600;margin:0 0 2px}
+.nav{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.nav a{color:var(--text)}
+.sub{color:var(--muted);margin:0 0 16px;max-width:75ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+button,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover,select:hover{border-color:#3a4b63}
+button:focus-visible,select:focus-visible{outline:2px solid var(--opp);outline-offset:2px}
+#play{min-width:96px;font-weight:600}
+.strip{display:flex;flex-wrap:wrap;gap:3px;margin:0 0 14px}
+.chip{width:26px;height:26px;padding:0;border-radius:4px;font-size:11px;font-variant-numeric:tabular-nums;display:grid;place-items:center;border:1px solid transparent}
+.chip.W{background:color-mix(in srgb,var(--entry) 30%,var(--panel));border-color:color-mix(in srgb,var(--entry) 55%,transparent)}
+.chip.L{background:color-mix(in srgb,var(--opp) 22%,var(--panel));border-color:color-mix(in srgb,var(--opp) 50%,transparent)}
+.chip.T{background:var(--panel);border-color:var(--tie)}
+.chip.on{outline:2px solid var(--text);outline-offset:1px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}}
+.stage{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#111a26;touch-action:none;cursor:grab}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#start{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;font-size:18px;padding:12px 22px;background:color-mix(in srgb,var(--panel) 88%,transparent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.panel h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.score{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.score .n{font-size:28px;font-weight:600;text-align:right;line-height:1.1}
+.who{display:flex;align-items:center;gap:8px}
+.key{display:inline-block;width:12px;height:12px;flex:none}
+.key.e{background:var(--entry)}
+.key.o{border:2px solid var(--opp);border-radius:50%}
+.key.b{width:8px;height:8px;margin:2px;background:var(--both);transform:rotate(45deg)}
+.rows{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-variant-numeric:tabular-nums;font-size:14px}
+.rows span:nth-child(even){text-align:right}
+.muted{color:var(--muted)}
+.verdict{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);min-height:3em}
+.total{margin-top:14px}
+footer{margin-top:22px;color:var(--muted);font-size:13.5px;max-width:85ch}
+footer p{margin:0 0 8px}
+code{font-size:12.5px;color:var(--text)}
+#err{display:none;color:#ff8f8f;margin:10px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Brot Hill · match replay</h1>
+<nav class="nav"><a href="shared.html">Shared fruit</a> · <b>Solo replay</b> · <a href="ENTER.md">Build a player and enter</a></nav>
+<p class="sub">Each hill round is a point A and a constant c. Two entrants search backward from A under F<sub>c</sub>(w) = B(w) + c on the same 300-expansion budget, and each scores the distinct ε = 1/16 cells its level-9 leaves land in. The cloud is the round's filled Bristorian J set (12 steps). The marks show which entrant claimed each cell.</p>
+
+<div class="bar">
+  <button id="play" aria-label="Play the hill">▶ Play</button>
+  <button id="prev" aria-label="Previous round">◀ Round</button>
+  <button id="next" aria-label="Next round">Round ▶</button>
+  <label>vs <select id="opp" aria-label="Opponent">
+    <option value="deepest">deepest-first (strongest baseline)</option>
+    <option value="novelty">novelty (hand heuristic)</option>
+    <option value="random">random</option>
+    <option value="shuffled-caro-little-v1">shuffled weights (planted fault)</option>
+  </select></label>
+  <span class="muted" id="where"></span>
+</div>
+<div class="strip" id="strip" role="group" aria-label="Rounds: W won, L lost, T tied by the little policy"></div>
+<div id="err"></div>
+
+<div class="wrap">
+  <div class="stage" id="stage">
+    <canvas id="gl" aria-label="Filled J set of the round's c, with claimed cells marked"></canvas>
+    <canvas id="marks" aria-hidden="true"></canvas>
+    <button id="start">▶ Play the hill</button>
+  </div>
+  <div>
+    <div class="panel">
+      <h2 id="rtitle">Round</h2>
+      <div class="score">
+        <span class="who"><span class="key e"></span>caro-little-v1</span><span class="n" id="sE">–</span>
+        <span class="who"><span class="key o"></span><span id="oppName">deepest-first</span></span><span class="n" id="sO">–</span>
+      </div>
+      <div class="rows">
+        <span><span class="key e"></span> policy only</span><span id="cE">–</span>
+        <span><span class="key o"></span> opponent only</span><span id="cO">–</span>
+        <span><span class="key b"></span> both</span><span id="cB">–</span>
+        <span class="muted">c (x, y, z)</span><span class="muted" id="cVal"></span>
+        <span class="muted">A</span><span class="muted" id="aVal"></span>
+      </div>
+      <p class="verdict" id="verdict"></p>
+      <div class="rows total" id="totals"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b>Reading it.</b> Orange squares are cells only the little policy reached, blue rings are cells only the opponent reached, and pale diamonds are cells both reached. The replay reveals each entrant's cells in the order its leaves came out of the search, paced by leaf count rather than by budget unit. Drag to turn the cloud. Space plays or pauses, and the arrow keys step rounds.</p>
+  <p><b>What is exact.</b> The scores are the referee's: <code>referee.py</code> checks every leaf in dyadic integer arithmetic and shares no code with the arena. On every round, the marked cells equal the referee's cell count; <code>match_data.mjs</code> refuses to build otherwise. The cloud is a finite 12-step GPU preview in float32, for orientation only, and the marks are drawn over it without depth occlusion.</p>
+  <p><b>Custody.</b> The hill seeds were committed by hash before training (<code>HILL_COMMITMENT.md</code>), and the entry was frozen by SHA-256 before they were opened. The same seat trained the entry and held the nonce, so this is procedural custody. The little policy is 109 int8 weights, not a language model, and these 32 rounds say nothing beyond these rules.</p>
+</footer>
+</main>
+
+<script type="module">
+import { createCloudRenderer, camera } from './codetree/blocks/volume_cloud_renderer/v5.js';
+
+const $ = id => document.getElementById(id);
+const COLORS = { entry: '#ffa94d', opp: '#6cc6ff', both: '#c6ced8' };
+const NAMES = { deepest: 'deepest-first', novelty: 'novelty', random: 'random', 'shuffled-caro-little-v1': 'shuffled weights' };
+const RIPEN = 1.4, CLAIM = 5, HOLD = 1.6, GRID = 64, STEPS = 12;
+const view = { kind: 'gaussian', az: .5, el: -.42, distance: 3.8, opacity: 12, exposure: 1.25, key: 1, fill: .15, rim: 1.5, footprint: 1, shadow: 1, shadowBlur: .35, liveWidth: 720 };
+
+const st = { data: null, round: 0, opp: 'deepest', playing: false, started: false, t: 0, last: 0, frames: 0, raf: 0, fruitTick: 0, shown: null };
+let renderer, gl = $('gl'), marks = $('marks'), ctx2 = marks.getContext('2d');
+
+function fail(msg) { const e = $('err'); e.style.display = 'block'; e.textContent = msg; }
+
+try {
+  renderer = createCloudRenderer(gl);
+  st.data = await (await fetch('match/hill_match.json')).json();
+} catch (e) { fail('Could not start: ' + e.message); throw e; }
+
+const entry = st.data.entry;
+const fmt = v => v.map(x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(3)).join(' ');
+
+function result(r, opp) { const d = r.play[entry].score - r.play[opp].score; return d > 0 ? 'W' : d < 0 ? 'L' : 'T'; }
+
+function buildStrip() {
+  const strip = $('strip'); strip.textContent = '';
+  st.data.rounds.forEach((r, i) => {
+    const b = document.createElement('button'), res = result(r, st.opp);
+    b.className = `chip ${res}` + (i === st.round ? ' on' : '');
+    b.textContent = i + 1; b.title = `Round ${i + 1}: ${res === 'W' ? 'won' : res === 'L' ? 'lost' : 'tied'} ${r.play[entry].score}–${r.play[st.opp].score}`;
+    b.setAttribute('aria-label', b.title);
+    b.onclick = () => { selectRound(i, { keepPlaying: st.playing }); };
+    strip.append(b);
+  });
+  const t = st.data.rounds.reduce((a, r) => (a[result(r, st.opp)]++, a), { W: 0, L: 0, T: 0 });
+  const E = st.data.entrants[entry].exact_total, O = st.data.entrants[st.opp].exact_total;
+  $('totals').innerHTML = `<span>All 32 hidden rounds</span><span></span>
+    <span>little policy</span><span>${E}</span><span>${NAMES[st.opp]}</span><span>${O}</span>
+    <span>ratio</span><span>${(E / O).toFixed(4)} ×</span><span>won · tied · lost</span><span>${t.W} · ${t.T} · ${t.L}</span>
+    <span>invalid leaves</span><span>${st.data.entrants[entry].invalid} · ${st.data.entrants[st.opp].invalid}</span>`;
+}
+
+// Cells claimed by each side up to replay time t (seconds into the round); Infinity shows the finished round.
+function claims(r, t) {
+  const f = t === Infinity ? 1 : Math.max(0, Math.min(1, (t - RIPEN) / CLAIM));
+  const map = new Map();
+  for (const [side, name] of [['e', entry], ['o', st.opp]]) {
+    const p = r.play[name], cut = f * p.leaves;
+    for (const [x, y, z, k] of p.cells) {
+      if (f < 1 && k >= cut) break;
+      const key = x + ',' + y + ',' + z, at = RIPEN + (k / p.leaves) * CLAIM, m = map.get(key);
+      if (m) { m[side] = at; } else map.set(key, { x, y, z, [side]: at });
+    }
+  }
+  return map;
+}
+
+function project(p, cam, W, H) {
+  const d = [p[0] - cam.eye[0], p[1] - cam.eye[1], p[2] - cam.eye[2]];
+  const z = d[0] * cam.forward[0] + d[1] * cam.forward[1] + d[2] * cam.forward[2];
+  if (z < .05) return null;
+  const qx = (d[0] * cam.right[0] + d[1] * cam.right[1] + d[2] * cam.right[2]) / z / .42;
+  const qy = (d[0] * cam.up[0] + d[1] * cam.up[1] + d[2] * cam.up[2]) / z / .42;
+  return { x: (qx * H / W + 1) / 2 * W, y: (1 - (qy + 1) / 2) * H, z };
+}
+
+function drawMarks(map, t) {
+  const dpr = devicePixelRatio || 1, W = marks.clientWidth * dpr, H = marks.clientHeight * dpr;
+  if (marks.width !== W || marks.height !== H) { marks.width = W; marks.height = H; }
+  ctx2.clearRect(0, 0, W, H);
+  const cam = camera(view, W / H), list = [];
+  let e = 0, o = 0, b = 0;
+  for (const m of map.values()) {
+    const owner = m.e !== undefined && m.o !== undefined ? 'both' : m.e !== undefined ? 'entry' : 'opp';
+    if (owner === 'both') b++; else if (owner === 'entry') e++; else o++;
+    const q = project([(m.x + .5) / 16, (m.y + .5) / 16, (m.z + .5) / 16], cam, W, H);
+    if (q) list.push({ ...q, owner, born: Math.max(m.e ?? -1, m.o ?? -1) });
+  }
+  list.sort((a, b2) => b2.z - a.z);
+  const zs = list.map(q => q.z), zmin = Math.min(...zs), zmax = Math.max(...zs);
+  for (const q of list) {
+    const s = Math.max(2 * dpr, Math.min(9 * dpr, (1 / 32) / q.z / .42 * H / 2));
+    const fresh = t !== Infinity && t - q.born < .35 ? 1 + 1.2 * (1 - (t - q.born) / .35) : 1;
+    ctx2.globalAlpha = .55 + .45 * (zmax > zmin ? (zmax - q.z) / (zmax - zmin) : 1);
+    const r = s * fresh;
+    if (q.owner === 'entry') { ctx2.fillStyle = COLORS.entry; ctx2.fillRect(q.x - r, q.y - r, 2 * r, 2 * r); }
+    else if (q.owner === 'opp') { ctx2.strokeStyle = COLORS.opp; ctx2.lineWidth = Math.max(1.5 * dpr, r * .45); ctx2.beginPath(); ctx2.arc(q.x, q.y, r * .9, 0, 7); ctx2.stroke(); }
+    else { const h = r * .75; ctx2.fillStyle = COLORS.both; ctx2.beginPath(); ctx2.moveTo(q.x, q.y - h); ctx2.lineTo(q.x + h, q.y); ctx2.lineTo(q.x, q.y + h); ctx2.lineTo(q.x - h, q.y); ctx2.fill(); }
+  }
+  ctx2.globalAlpha = 1;
+  // A, the round's target point, as a small white cross.
+  const r = st.data.rounds[st.round], a = project(r.A, cam, W, H);
+  if (a) { ctx2.strokeStyle = '#ffffff'; ctx2.lineWidth = 2 * dpr; const k = 7 * dpr; ctx2.beginPath(); ctx2.moveTo(a.x - k, a.y); ctx2.lineTo(a.x + k, a.y); ctx2.moveTo(a.x, a.y - k); ctx2.lineTo(a.x, a.y + k); ctx2.stroke(); }
+  return { e, o, b, drawn: list.length };
+}
+
+function panel(r, counts, finished) {
+  $('rtitle').textContent = `Round ${st.round + 1} of 32`;
+  $('oppName').textContent = NAMES[st.opp];
+  $('sE').textContent = counts.e + counts.b; $('sO').textContent = counts.o + counts.b;
+  $('cE').textContent = counts.e; $('cO').textContent = counts.o; $('cB').textContent = counts.b;
+  $('cVal').textContent = fmt(r.c); $('aVal').textContent = fmt(r.A);
+  const E = r.play[entry], O = r.play[st.opp];
+  if (finished) {
+    const res = result(r, st.opp), word = res === 'W' ? 'The little policy wins the round' : res === 'L' ? `${NAMES[st.opp]} wins the round` : 'Tied round';
+    $('verdict').textContent = `${word}, ${E.score}–${O.score} (referee, exact). Leaves: ${E.leaves} vs ${O.leaves}; invalid: ${E.invalid} vs ${O.invalid}.`;
+  } else $('verdict').textContent = !st.started ? 'Press ▶ to replay the 32 hidden rounds, or pick a round.' : st.t < RIPEN ? 'The fruit ripens…' : 'Searching…';
+  $('where').textContent = st.playing ? 'playing' : st.started ? 'paused' : '';
+}
+
+// Ripen the fruit: the GPU preview's step count climbs to 12 while the old round's cloud fades into the new one.
+function fruit(r, t, dt) {
+  const steps = Math.max(1, Math.min(STEPS, Math.round(1 + (STEPS - 1) * Math.min(1, t / RIPEN))));
+  if (t < RIPEN + .8) renderer.updateLive(r.c, steps, { n: GRID, smoothMs: 160, cohorts: 2, dtMs: dt });
+}
+
+function frame(now) {
+  st.raf = 0;
+  const dt = st.last ? Math.min(100, now - st.last) : 16.667; st.last = now;
+  const r = st.data.rounds[st.round];
+  if (st.playing) { st.t += dt / 1000; view.az += dt / 1000 * .12; fruit(r, st.t, dt); }
+  const finished = st.t >= RIPEN + CLAIM;
+  renderer.draw(view, { quick: true });
+  const counts = drawMarks(claims(r, finished ? Infinity : st.t), finished ? Infinity : st.t);
+  st.shown = counts; st.frames++;
+  panel(r, counts, finished);
+  if (st.playing && st.t >= RIPEN + CLAIM + HOLD) {
+    if (st.round < st.data.rounds.length - 1) { selectRound(st.round + 1, { keepPlaying: true }); return; }
+    setPlaying(false); return;
+  }
+  if (st.playing) st.raf = requestAnimationFrame(frame);
+}
+function redraw() { if (!st.raf) st.raf = requestAnimationFrame(frame); }
+
+function selectRound(i, { keepPlaying = false } = {}) {
+  st.round = Math.max(0, Math.min(st.data.rounds.length - 1, i));
+  const r = st.data.rounds[st.round];
+  if (keepPlaying) { st.t = 0; }
+  else { st.started = true; $('start').hidden = true; st.t = RIPEN + CLAIM; renderer.updateLive(r.c, STEPS, { n: GRID }); setPlaying(false); }
+  buildStrip(); redraw();
+}
+
+function setPlaying(on) {
+  st.playing = on;
+  if (on) { st.started = true; $('start').hidden = true; if (st.t >= RIPEN + CLAIM) st.t = 0; st.last = 0; }
+  $('play').textContent = on ? '❚❚ Pause' : '▶ Play';
+  $('play').setAttribute('aria-label', on ? 'Pause' : 'Play the hill');
+  redraw();
+}
+
+$('play').onclick = $('start').onclick = () => setPlaying(!st.playing);
+$('prev').onclick = () => selectRound(st.round - 1, { keepPlaying: st.playing });
+$('next').onclick = () => selectRound(st.round + 1, { keepPlaying: st.playing });
+$('opp').onchange = e => { st.opp = e.target.value; buildStrip(); redraw(); };
+addEventListener('keydown', e => {
+  if (e.target.closest('select')) return;
+  if (e.code === 'Space') { e.preventDefault(); setPlaying(!st.playing); }
+  else if (e.key === 'ArrowRight') selectRound(st.round + 1, { keepPlaying: st.playing });
+  else if (e.key === 'ArrowLeft') selectRound(st.round - 1, { keepPlaying: st.playing });
+});
+let drag = null;
+$('stage').addEventListener('pointerdown', e => { if (e.target.id === 'start') return; drag = { x: e.clientX, y: e.clientY }; e.currentTarget.setPointerCapture(e.pointerId); });
+$('stage').addEventListener('pointermove', e => {
+  if (!drag) return;
+  view.az -= (e.clientX - drag.x) * .008; view.el = Math.max(-1.4, Math.min(1.4, view.el + (e.clientY - drag.y) * .008));
+  drag = { x: e.clientX, y: e.clientY }; redraw();
+});
+$('stage').addEventListener('pointerup', () => { drag = null; });
+addEventListener('resize', redraw);
+
+buildStrip();
+renderer.updateLive(st.data.rounds[0].c, STEPS, { n: GRID });
+redraw();
+
+// For browser checks: read-only status and a seek that does not start playback.
+window.brotHill = {
+  get status() { return { round: st.round, opp: st.opp, playing: st.playing, started: st.started, t: st.t, frames: st.frames, shown: st.shown, live: renderer.liveStats, frame: renderer.stats }; },
+  expected(i = st.round, opp = st.opp) { const r = st.data.rounds[i]; return { entry: r.play[entry].score, opp: r.play[opp].score }; },
+  show(i) { selectRound(i); },
+};
+</script>
+</body>
+</html>

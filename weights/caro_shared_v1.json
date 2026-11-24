@@ -1,0 +1,331 @@
+{
+ "format": "brot-hill-shared-weights/1",
+ "name": "caro-shared-v1",
+ "author": "caro",
+ "rules": "brot-hill-shared/1",
+ "base_rules": "brot-hill/1",
+ "shape": {
+  "inputs": 8,
+  "hidden": 12
+ },
+ "features": [
+  "level/n",
+  "|w|/2",
+  "|w-c|/4",
+  "t_hat_x",
+  "log1p(seen at level+cell)",
+  "parent survivors/6",
+  "budget used",
+  "log1p(rival expansions at level+cell)"
+ ],
+ "int8": {
+  "q": [
+   -44,
+   9,
+   -34,
+   -20,
+   -26,
+   30,
+   -23,
+   15,
+   -38,
+   -13,
+   -55,
+   -7,
+   23,
+   4,
+   -29,
+   -2,
+   -52,
+   -42,
+   -90,
+   -38,
+   52,
+   31,
+   -75,
+   -21,
+   -75,
+   77,
+   58,
+   8,
+   41,
+   2,
+   100,
+   -37,
+   -28,
+   -35,
+   -29,
+   -40,
+   62,
+   41,
+   78,
+   -25,
+   70,
+   35,
+   -93,
+   -32,
+   19,
+   -86,
+   83,
+   -43,
+   -26,
+   105,
+   66,
+   7,
+   69,
+   127,
+   9,
+   -8,
+   23,
+   -33,
+   32,
+   13,
+   -40,
+   -35,
+   -7,
+   -78,
+   -80,
+   -33,
+   -46,
+   -46,
+   43,
+   6,
+   -61,
+   -35,
+   -65,
+   -33,
+   66,
+   -53,
+   37,
+   -15,
+   13,
+   63,
+   77,
+   73,
+   21,
+   -22,
+   8,
+   -21,
+   -42,
+   -82,
+   -42,
+   59,
+   35,
+   19,
+   -15,
+   32,
+   22,
+   31,
+   -127,
+   94,
+   32,
+   64,
+   57,
+   -9,
+   -23,
+   88,
+   9,
+   4,
+   -124,
+   -41,
+   -18,
+   62,
+   -7,
+   79,
+   -127,
+   45,
+   -76,
+   17,
+   -107,
+   -90,
+   90,
+   -62,
+   -127
+  ],
+  "scales": [
+   0.016298260906554722,
+   0.012189734646113306,
+   0.00973749323625209,
+   0.0003986578511379926
+  ]
+ },
+ "training": {
+  "method": "antithetic ES, rank utilities, Adam; warm start from caro-little-v1 with a zero rival column",
+  "pool": [
+   "deepest",
+   "novelty",
+   "dodge",
+   "caro-little-v1"
+  ],
+  "fitness": "owned share, both seat orders",
+  "gens": 150,
+  "pop": 32,
+  "rounds_per_gen": 4,
+  "sigma": 0.06,
+  "lr": 0.04,
+  "seed": 20261125,
+  "chosen_gen": 149,
+  "val_share_float": 0.6424,
+  "val_share_int8": 0.642,
+  "warm_start_val_share": 0.5015,
+  "val_rounds": 12,
+  "log": [
+   {
+    "gen": -1,
+    "val": 0.5015
+   },
+   {
+    "gen": 4,
+    "train_mean": 0.5805,
+    "val": 0.579
+   },
+   {
+    "gen": 9,
+    "train_mean": 0.5691,
+    "val": 0.5678
+   },
+   {
+    "gen": 14,
+    "train_mean": 0.5789,
+    "val": 0.5682
+   },
+   {
+    "gen": 19,
+    "train_mean": 0.6102,
+    "val": 0.5704
+   },
+   {
+    "gen": 24,
+    "train_mean": 0.5839,
+    "val": 0.5692
+   },
+   {
+    "gen": 29,
+    "train_mean": 0.5448,
+    "val": 0.5756
+   },
+   {
+    "gen": 34,
+    "train_mean": 0.5661,
+    "val": 0.5756
+   },
+   {
+    "gen": 39,
+    "train_mean": 0.5867,
+    "val": 0.5901
+   },
+   {
+    "gen": 44,
+    "train_mean": 0.5676,
+    "val": 0.5971
+   },
+   {
+    "gen": 49,
+    "train_mean": 0.5756,
+    "val": 0.5987
+   },
+   {
+    "gen": 54,
+    "train_mean": 0.6412,
+    "val": 0.6089
+   },
+   {
+    "gen": 59,
+    "train_mean": 0.6026,
+    "val": 0.6214
+   },
+   {
+    "gen": 64,
+    "train_mean": 0.6063,
+    "val": 0.6188
+   },
+   {
+    "gen": 69,
+    "train_mean": 0.6131,
+    "val": 0.6137
+   },
+   {
+    "gen": 74,
+    "train_mean": 0.6387,
+    "val": 0.6287
+   },
+   {
+    "gen": 79,
+    "train_mean": 0.599,
+    "val": 0.6376
+   },
+   {
+    "gen": 84,
+    "train_mean": 0.5571,
+    "val": 0.6356
+   },
+   {
+    "gen": 89,
+    "train_mean": 0.6897,
+    "val": 0.6335
+   },
+   {
+    "gen": 94,
+    "train_mean": 0.5864,
+    "val": 0.6263
+   },
+   {
+    "gen": 99,
+    "train_mean": 0.5475,
+    "val": 0.6262
+   },
+   {
+    "gen": 104,
+    "train_mean": 0.5872,
+    "val": 0.6225
+   },
+   {
+    "gen": 109,
+    "train_mean": 0.6167,
+    "val": 0.6221
+   },
+   {
+    "gen": 114,
+    "train_mean": 0.6308,
+    "val": 0.6266
+   },
+   {
+    "gen": 119,
+    "train_mean": 0.553,
+    "val": 0.63
+   },
+   {
+    "gen": 124,
+    "train_mean": 0.661,
+    "val": 0.6298
+   },
+   {
+    "gen": 129,
+    "train_mean": 0.6261,
+    "val": 0.638
+   },
+   {
+    "gen": 134,
+    "train_mean": 0.6031,
+    "val": 0.635
+   },
+   {
+    "gen": 139,
+    "train_mean": 0.6922,
+    "val": 0.6388
+   },
+   {
+    "gen": 144,
+    "train_mean": 0.6329,
+    "val": 0.6407
+   },
+   {
+    "gen": 149,
+    "train_mean": 0.6885,
+    "val": 0.6424
+   }
+  ],
+  "seconds": 174.6,
+  "seeds": "strain/<gen>/<j>, sval/<i>; scheck and hidden seeds unseen"
+ }
+}

@@ -1,0 +1,11 @@
+# Entries
+
+Enter Brot Hill by opening a pull request that adds **one file**: `entries/<your-name>.json`, your player's weights.
+
+- The file is your weights entry, exactly as `ENTER.md` describes (`brot-hill-shared-weights/1` with 121 int8 weights, or `brot-hill-weights/1` with 109). Its `name` field must match the file name. Use only `A-Z a-z 0-9 . _ -`, at most 40 characters.
+- In the pull request text, write a few lines on how you built it (findings, not methods).
+- A check runs `node validate_entry.mjs entries/*.json`. It reads the file as data and never runs it. Run the same command yourself before you open the pull request.
+- One entry per author per season. A pull request that changes anything outside `entries/` is not an entry.
+- When the entry is merged it is frozen: its SHA-256 at that commit is the entry that plays. To change it, open a new pull request before the season closes.
+
+Season 1: the close date and the seat that holds the hidden seeds will be posted in the main README. Pull requests are checked now and merged when the season opens.

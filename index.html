@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brot Hill · shared fruit</title>
+<style>
+:root{--bg:#0d1219;--panel:#141b25;--line:#243041;--text:#dde5ee;--muted:#8e9cae;--p0:#ffa94d;--p1:#6cc6ff;--tie:#56637a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:20px 20px 40px}
+h1{font-size:20px;font-weight:600;margin:0 0 2px}
+.nav{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.nav a{color:var(--text)}
+.sub{color:var(--muted);margin:0 0 16px;max-width:78ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+button,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover,select:hover{border-color:#3a4b63}
+button:focus-visible,select:focus-visible{outline:2px solid var(--p1);outline-offset:2px}
+#play{min-width:96px;font-weight:600}
+.strips{margin:0 0 14px;display:grid;gap:4px}
+.strip{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.strip .lab{color:var(--muted);font-size:12.5px;width:200px}
+.chip{width:26px;height:26px;padding:0;border-radius:4px;font-size:11px;font-variant-numeric:tabular-nums;display:grid;place-items:center;border:1px solid transparent}
+.chip.W{background:color-mix(in srgb,var(--p0) 30%,var(--panel));border-color:color-mix(in srgb,var(--p0) 55%,transparent)}
+.chip.L{background:color-mix(in srgb,var(--p1) 22%,var(--panel));border-color:color-mix(in srgb,var(--p1) 50%,transparent)}
+.chip.T{background:var(--panel);border-color:var(--tie)}
+.chip.on{outline:2px solid var(--text);outline-offset:1px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}.strip .lab{width:100%}}
+.stage{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#111a26;touch-action:none;cursor:grab}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#start{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;font-size:18px;padding:12px 22px;background:color-mix(in srgb,var(--panel) 88%,transparent)}
+#tick{position:absolute;left:12px;bottom:10px;font-size:13px;color:#fff;text-shadow:0 1px 3px #000;font-variant-numeric:tabular-nums}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.panel h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.score{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.score .n{font-size:28px;font-weight:600;text-align:right;line-height:1.1}
+.who{display:flex;align-items:center;gap:8px;min-width:0}
+.key{display:inline-block;width:12px;height:12px;flex:none}
+.key.p0{background:var(--p0)}
+.key.p1{border:2px solid var(--p1);border-radius:50%}
+.rows{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-variant-numeric:tabular-nums;font-size:14px}
+.rows span:nth-child(even){text-align:right}
+.muted{color:var(--muted)}
+.verdict{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);min-height:3em}
+.total{margin-top:14px}
+footer{margin-top:22px;color:var(--muted);font-size:13.5px;max-width:85ch}
+footer p{margin:0 0 8px}
+code{font-size:12.5px;color:var(--text)}
+#err{display:none;color:#ff8f8f;margin:10px 0}
+.labbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px;padding:10px 12px;border:1px dashed var(--line);border-radius:8px}
+.labbar.drop{border-color:var(--p0)}
+#labMsg.bad{color:#ff8f8f}
+#labPanel{margin-top:16px}
+.small{font-size:13px;margin:10px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Brot Hill · shared fruit</h1>
+<nav class="nav"><b>Shared fruit</b> · <a href="match.html">Solo replay</a> · <a href="ENTER.md">Build a player and enter</a></nav>
+<p class="sub">Two players search the same round at once, taking turns at one backward expansion each from the point A, 300 turns apiece. A level-9 cell belongs to whoever reaches it first, so going where the rival has already been wins nothing. Each pairing plays every round twice with the seats swapped. The cloud is the round's filled Bristorian J set (12 steps), and every mark is a cell, coloured by its first claimant.</p>
+
+<div class="bar">
+  <button id="play" aria-label="Play the hill">▶ Play</button>
+  <button id="prev" aria-label="Previous game">◀ Game</button>
+  <button id="next" aria-label="Next game">Game ▶</button>
+  <label>vs <select id="pair" aria-label="Pairing"></select></label>
+  <span class="muted" id="where"></span>
+</div>
+<div class="labbar" id="lab">
+  <button id="loadBtn">Load your player…</button><input type="file" id="file" accept=".json,application/json" hidden>
+  <span class="muted" id="labMsg">Test a weights file (or drop one here) against the pool on the 16 public rounds. It runs in your browser; nothing is uploaded.</span>
+</div>
+<div class="strips" id="strips" role="group" aria-label="Games: W the shared policy won, L lost, T tied"></div>
+<div id="err"></div>
+
+<div class="wrap">
+  <div class="stage" id="stage">
+    <canvas id="gl" aria-label="Filled J set of the round's c, with cells marked by first claimant"></canvas>
+    <canvas id="marks" aria-hidden="true"></canvas>
+    <span id="tick"></span>
+    <button id="start">▶ Play the shared fruit</button>
+  </div>
+  <div>
+    <div class="panel">
+      <h2 id="gtitle">Game</h2>
+      <div class="score">
+        <span class="who"><span class="key p0"></span><span id="n0"></span></span><span class="n" id="s0">–</span>
+        <span class="who"><span class="key p1"></span><span id="n1"></span></span><span class="n" id="s1">–</span>
+      </div>
+      <div class="rows">
+        <span class="muted">moves first</span><span class="muted" id="first"></span>
+        <span class="muted">c (x, y, z)</span><span class="muted" id="cVal"></span>
+        <span class="muted">A</span><span class="muted" id="aVal"></span>
+      </div>
+      <p class="verdict" id="verdict"></p>
+      <div class="rows total" id="totals"></div>
+    </div>
+    <div class="panel" id="labPanel" hidden>
+      <h2 id="labTitle">Your player · practice</h2>
+      <div class="rows" id="labRows"></div>
+      <p class="muted small">Float tallies on the public rounds, 32 games per pairing. Official scores come from the exact referee on hidden rounds after you enter.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b>Reading it.</b> Orange squares are cells the shared policy claimed first; blue rings are cells its opponent claimed first. The replay follows the real turn clock: claims appear on the turn that made them. "Landed on taken cells" counts leaves that arrived after the cell was already owned, which is wasted budget. Drag to turn the cloud. Space plays or pauses, and the arrow keys step games.</p>
+  <p><b>What is exact.</b> The scores are the referee's: <code>referee_shared.py</code> checks every leaf in dyadic integer arithmetic, refuses logs out of turn order, and re-derives ownership from the log. In every game, the marked ownership equals the referee's; <code>shared_data.mjs</code> refuses to build otherwise. The referee does not certify the budget or which search produced a leaf; the arena runs both searches and writes the log. The cloud is a finite float32 GPU preview for orientation, and the marks are drawn over it without depth occlusion.</p>
+  <p><b>Custody.</b> The hidden seeds were committed by hash before any shared-fruit code ran (<code>SHARED_COMMITMENT.md</code>), along with the acceptance rule. The entry was frozen by SHA-256 before the seeds were opened. The same seat trained the entry and held the nonce: procedural custody. The shared policy is 121 int8 weights that see one public fact about rivals, where they have expanded.</p>
+</footer>
+</main>
+
+<script type="module">
+import { createCloudRenderer, camera } from './codetree/blocks/volume_cloud_renderer/v5.js';
+import { validateEntry, practice } from './lab.mjs';
+
+const $ = id => document.getElementById(id);
+const COLORS = ['#ffa94d', '#6cc6ff'];
+const RIPEN = 1.4, CLAIM = 5, HOLD = 1.6, GRID = 64, STEPS = 12, BUDGET = 300;
+const view = { kind: 'gaussian', az: .5, el: -.42, distance: 3.8, opacity: 12, exposure: 1.25, key: 1, fill: .15, rim: 1.5, footprint: 1, shadow: 1, shadowBlur: .35, liveWidth: 720 };
+const st = { base: null, index: null, pair: null, pairIdx: 0, game: 0, playing: false, started: false, t: 0, last: 0, frames: 0, raf: 0, shown: null };
+const marks = $('marks'), ctx2 = marks.getContext('2d');
+let renderer;
+
+function fail(msg) { const e = $('err'); e.style.display = 'block'; e.textContent = msg; }
+async function json(url) { const r = await fetch(url); if (!r.ok) throw Error(url + ': ' + r.status); return r.json(); }
+
+try {
+  renderer = createCloudRenderer($('gl'));
+  const want = new URLSearchParams(location.search).get('set');
+  for (const set of want ? [want] : ['hill', 'check']) {
+    try { st.index = await json(`match/shared_${set}/index.json`); st.base = `match/shared_${set}/`; st.set = set; break; } catch (e) { if (want) throw e; }
+  }
+  if (!st.index) throw Error('no shared match data found');
+} catch (e) { fail('Could not start: ' + e.message); throw e; }
+
+const fmt = v => v.map(x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(3)).join(' ');
+const short = n => n === 'deepest' ? 'deepest-first' : n.startsWith('shuffled-') ? 'shuffled weights' : n;
+const tickOf = t => Math.max(0, Math.min(BUDGET, Math.floor((t - RIPEN) / CLAIM * BUDGET)));
+const result = g => g.score[0] > g.score[1] ? 'W' : g.score[0] < g.score[1] ? 'L' : 'T';
+
+st.options = st.index.pairings.map(p => ({ label: short(p.players[1]), group: null, load: () => json(st.base + p.file) }));
+function renderOptions(select = st.pairIdx) {
+  const sel = $('pair'); sel.textContent = ''; const groups = new Map();
+  st.options.forEach((o, i) => {
+    const el = document.createElement('option'); el.value = i; el.textContent = o.label;
+    if (!o.group) { sel.append(el); return; }
+    if (!groups.has(o.group)) { const g = document.createElement('optgroup'); g.label = o.group; groups.set(o.group, g); sel.append(g); }
+    groups.get(o.group).append(el);
+  });
+  sel.value = select;
+}
+renderOptions(0);
+
+async function loadPair(i) {
+  st.pairIdx = i; st.pair = await st.options[i].load();
+  $('n0').textContent = short(st.pair.players[0]); $('n1').textContent = short(st.pair.players[1]);
+  const P = st.pair, [a, b] = P.total;
+  $('totals').innerHTML = `<span>All ${P.games.length} ${P.practice ? 'practice games (float)' : st.set === 'hill' ? 'hidden games' : 'public check games'}</span><span></span>
+    <span>${short(P.players[0])}</span><span>${a}</span><span>${short(P.players[1])}</span><span>${b}</span>
+    <span>share of owned cells</span><span>${(a / (a + b)).toFixed(3)}</span>
+    <span>games won · tied · lost</span><span>${P.game_wins[0]} · ${P.ties} · ${P.game_wins[1]}</span>
+    <span>invalid leaves</span><span>${P.invalid[0]} · ${P.invalid[1]}</span>`;
+  buildStrips();
+}
+
+function buildStrips() {
+  const box = $('strips'); box.textContent = '';
+  for (const k of [0, 1]) {
+    const row = document.createElement('div'); row.className = 'strip';
+    const lab = document.createElement('span'); lab.className = 'lab'; lab.textContent = k === 0 ? `${short(st.pair.players[0])} moves first` : `${short(st.pair.players[1])} moves first`;
+    row.append(lab);
+    st.pair.games.forEach((g, i) => {
+      if ((g.seats[0] === 0 ? 0 : 1) !== k) return;
+      const b = document.createElement('button'), res = result(g);
+      b.className = `chip ${res}` + (i === st.game ? ' on' : ''); b.textContent = Math.floor(i / 2) + 1;
+      b.title = `Round ${Math.floor(i / 2) + 1}, ${lab.textContent}: ${res === 'W' ? 'won' : res === 'L' ? 'lost' : 'tied'} ${g.score[0]}–${g.score[1]}`;
+      b.setAttribute('aria-label', b.title);
+      b.onclick = () => selectGame(i, { keepPlaying: st.playing });
+      row.append(b);
+    });
+    box.append(row);
+  }
+}
+
+function project(p, cam, W, H) {
+  const d = [p[0] - cam.eye[0], p[1] - cam.eye[1], p[2] - cam.eye[2]];
+  const z = d[0] * cam.forward[0] + d[1] * cam.forward[1] + d[2] * cam.forward[2];
+  if (z < .05) return null;
+  const qx = (d[0] * cam.right[0] + d[1] * cam.right[1] + d[2] * cam.right[2]) / z / .42;
+  const qy = (d[0] * cam.up[0] + d[1] * cam.up[1] + d[2] * cam.up[2]) / z / .42;
+  return { x: (qx * H / W + 1) / 2 * W, y: (1 - (qy + 1) / 2) * H, z };
+}
+
+// Claims up to and including turn `tick` (BUDGET shows the finished game).
+function drawMarks(g, tick, pulse) {
+  const dpr = devicePixelRatio || 1, W = marks.clientWidth * dpr, H = marks.clientHeight * dpr;
+  if (marks.width !== W || marks.height !== H) { marks.width = W; marks.height = H; }
+  ctx2.clearRect(0, 0, W, H);
+  const cam = camera(view, W / H), list = [], owned = [0, 0];
+  for (const [t, p, x, y, z] of g.claims) {
+    if (t > tick) break;
+    owned[p]++;
+    const q = project([(x + .5) / 16, (y + .5) / 16, (z + .5) / 16], cam, W, H);
+    if (q) list.push({ ...q, p, t });
+  }
+  list.sort((a, b) => b.z - a.z);
+  const zs = list.map(q => q.z), zmin = Math.min(...zs), zmax = Math.max(...zs);
+  for (const q of list) {
+    const s = Math.max(2 * dpr, Math.min(9 * dpr, (1 / 32) / q.z / .42 * H / 2));
+    const r = s * (pulse && tick - q.t < 18 ? 1 + 1.2 * (1 - (tick - q.t) / 18) : 1);
+    ctx2.globalAlpha = .55 + .45 * (zmax > zmin ? (zmax - q.z) / (zmax - zmin) : 1);
+    if (q.p === 0) { ctx2.fillStyle = COLORS[0]; ctx2.fillRect(q.x - r, q.y - r, 2 * r, 2 * r); }
+    else { ctx2.strokeStyle = COLORS[1]; ctx2.lineWidth = Math.max(1.5 * dpr, r * .45); ctx2.beginPath(); ctx2.arc(q.x, q.y, r * .9, 0, 7); ctx2.stroke(); }
+  }
+  ctx2.globalAlpha = 1;
+  const a = project(g.A, cam, W, H);
+  if (a) { ctx2.strokeStyle = '#ffffff'; ctx2.lineWidth = 2 * dpr; const k = 7 * dpr; ctx2.beginPath(); ctx2.moveTo(a.x - k, a.y); ctx2.lineTo(a.x + k, a.y); ctx2.moveTo(a.x, a.y - k); ctx2.lineTo(a.x, a.y + k); ctx2.stroke(); }
+  return { owned, drawn: list.length };
+}
+
+function panel(g, counts, finished, tick) {
+  $('gtitle').textContent = `Round ${Math.floor(st.game / 2) + 1} of ${st.pair.games.length / 2} · game ${st.game % 2 ? 'b' : 'a'}`;
+  $('s0').textContent = counts.owned[0]; $('s1').textContent = counts.owned[1];
+  $('first').textContent = short(st.pair.players[g.seats[0]]);
+  $('cVal').textContent = fmt(g.c); $('aVal').textContent = fmt(g.A);
+  $('tick').textContent = !st.started ? '' : finished ? `turn ${BUDGET} of ${BUDGET}` : st.t < RIPEN ? 'ripening' : `turn ${tick + 1} of ${BUDGET}`;
+  if (finished) {
+    const res = result(g), word = res === 'W' ? `${short(st.pair.players[0])} takes the round` : res === 'L' ? `${short(st.pair.players[1])} takes the round` : 'Tied';
+    $('verdict').textContent = `${word}, ${g.score[0]}–${g.score[1]} (${st.pair.practice ? 'practice, float' : 'referee, exact'}). Landed on taken cells: ${g.wasted[0]} vs ${g.wasted[1]} leaves.`;
+  } else $('verdict').textContent = !st.started ? 'Press ▶ to replay every game, or pick one.' : st.t < RIPEN ? 'The fruit ripens…' : 'Both searching, turn by turn…';
+  $('where').textContent = st.playing ? 'playing' : st.started ? 'paused' : '';
+}
+
+function frame(now) {
+  st.raf = 0;
+  const dt = st.last ? Math.min(100, now - st.last) : 16.667; st.last = now;
+  const g = st.pair.games[st.game];
+  if (st.playing) {
+    st.t += dt / 1000; view.az += dt / 1000 * .12;
+    const steps = Math.max(1, Math.min(STEPS, Math.round(1 + (STEPS - 1) * Math.min(1, st.t / RIPEN))));
+    if (st.t < RIPEN + .8) renderer.updateLive(g.c, steps, { n: GRID, smoothMs: 160, cohorts: 2, dtMs: dt });
+  }
+  const finished = st.t >= RIPEN + CLAIM, tick = finished ? BUDGET : st.t < RIPEN ? -1 : tickOf(st.t);
+  renderer.draw(view, { quick: true });
+  const counts = drawMarks(g, tick, !finished);
+  st.shown = { ...counts, tick }; st.frames++;
+  panel(g, counts, finished, tick);
+  if (st.playing && st.t >= RIPEN + CLAIM + HOLD) {
+    if (st.game < st.pair.games.length - 1) { selectGame(st.game + 1, { keepPlaying: true }); return; }
+    setPlaying(false); return;
+  }
+  if (st.playing) st.raf = requestAnimationFrame(frame);
+}
+function redraw() { if (!st.raf) st.raf = requestAnimationFrame(frame); }
+
+function selectGame(i, { keepPlaying = false } = {}) {
+  st.game = Math.max(0, Math.min(st.pair.games.length - 1, i));
+  if (keepPlaying) st.t = 0;
+  else { st.started = true; $('start').hidden = true; st.t = RIPEN + CLAIM; renderer.updateLive(st.pair.games[st.game].c, STEPS, { n: GRID }); setPlaying(false); }
+  buildStrips(); redraw();
+}
+
+function setPlaying(on) {
+  st.playing = on;
+  if (on) { st.started = true; $('start').hidden = true; if (st.t >= RIPEN + CLAIM) st.t = 0; st.last = 0; }
+  $('play').textContent = on ? '❚❚ Pause' : '▶ Play';
+  $('play').setAttribute('aria-label', on ? 'Pause' : 'Play the hill');
+  redraw();
+}
+
+$('play').onclick = $('start').onclick = () => setPlaying(!st.playing);
+$('prev').onclick = () => selectGame(st.game - 1, { keepPlaying: st.playing });
+$('next').onclick = () => selectGame(st.game + 1, { keepPlaying: st.playing });
+$('pair').onchange = async e => { const was = st.playing; setPlaying(false); await loadPair(+e.target.value); if (st.started) selectGame(st.game, { keepPlaying: was }); if (was) setPlaying(true); redraw(); };
+addEventListener('keydown', e => {
+  if (e.target.closest('select')) return;
+  if (e.code === 'Space') { e.preventDefault(); setPlaying(!st.playing); }
+  else if (e.key === 'ArrowRight') selectGame(st.game + 1, { keepPlaying: st.playing });
+  else if (e.key === 'ArrowLeft') selectGame(st.game - 1, { keepPlaying: st.playing });
+});
+let drag = null;
+$('stage').addEventListener('pointerdown', e => { if (e.target.id === 'start') return; drag = { x: e.clientX, y: e.clientY }; e.currentTarget.setPointerCapture(e.pointerId); });
+$('stage').addEventListener('pointermove', e => {
+  if (!drag) return;
+  view.az -= (e.clientX - drag.x) * .008; view.el = Math.max(-1.4, Math.min(1.4, view.el + (e.clientY - drag.y) * .008));
+  drag = { x: e.clientX, y: e.clientY }; redraw();
+});
+$('stage').addEventListener('pointerup', () => { drag = null; });
+addEventListener('resize', redraw);
+
+// Load your player: data only, validated against the entry contract, played here against the pool.
+async function loadPlayer(text) {
+  const msg = $('labMsg'); msg.classList.remove('bad');
+  let v; try { v = validateEntry(text); } catch (e) { msg.classList.add('bad'); msg.textContent = 'Not loaded: ' + e.message; return null; }
+  $('loadBtn').disabled = true;
+  try {
+    const pairs = await practice(v.entry, v.name, { onProgress: (o, i, n) => { msg.textContent = `Playing ${v.name} vs ${short(o)}: round ${i} of ${n}…`; } });
+    const group = `${v.name} (practice)`;
+    st.options = st.options.filter(o => o.group !== group);
+    const first = st.options.length;
+    for (const p of pairs) st.options.push({ label: `${v.name} vs ${short(p.players[1])}`, group, load: async () => p });
+    $('labTitle').textContent = `${v.name} · practice`;
+    $('labRows').innerHTML = '<span class="muted">vs</span><span class="muted">owned · games won</span>' + pairs.map(p => `<span>${short(p.players[1])}</span><span>${p.total[0]} : ${p.total[1]} · ${p.game_wins[0]}–${p.game_wins[1]}</span>`).join('');
+    $('labPanel').hidden = false;
+    const beat = pairs.filter(p => p.total[0] > p.total[1]).map(p => short(p.players[1]));
+    msg.textContent = `${v.name} owns more cells than ${beat.length} of ${pairs.length} pool players${beat.length ? ' (' + beat.join(', ') + ')' : ''}. Its games are in the "vs" menu.`;
+    renderOptions(first); await loadPair(first); selectGame(0);
+    return pairs.map(p => ({ opp: p.players[1], total: p.total, wins: p.game_wins }));
+  } finally { $('loadBtn').disabled = false; }
+}
+$('loadBtn').onclick = () => $('file').click();
+$('file').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await loadPlayer(f.size > 65536 ? 'x'.repeat(65537) : await f.text()); };
+for (const ev of ['dragover', 'dragenter']) document.addEventListener(ev, e => { e.preventDefault(); $('lab').classList.add('drop'); });
+for (const ev of ['dragleave', 'drop']) document.addEventListener(ev, () => $('lab').classList.remove('drop'));
+document.addEventListener('drop', async e => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) await loadPlayer(f.size > 65536 ? 'x'.repeat(65537) : await f.text()); });
+
+await loadPair(0);
+renderer.updateLive(st.pair.games[0].c, STEPS, { n: GRID });
+redraw();
+
+// For browser checks: read-only status, expected exact scores, and a seek that does not start playback.
+window.brotShared = {
+  get status() { return { set: st.set, pair: st.pairIdx, game: st.game, playing: st.playing, started: st.started, t: st.t, frames: st.frames, shown: st.shown, live: renderer.liveStats }; },
+  get pairings() { return st.options.length; },
+  async loadText(text) { return loadPlayer(text); },
+  games() { return st.pair.games.length; },
+  expected(i = st.game) { return st.pair.games[i].score; },
+  async pairing(i) { renderOptions(i); await loadPair(i); },
+  show(i) { selectGame(i); },
+};
+</script>
+</body>
+</html>
