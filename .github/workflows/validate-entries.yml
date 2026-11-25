@@ -18,5 +18,9 @@ jobs:
         run: |
           outside=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -v '^entries/' || true)
           if [ -n "$outside" ]; then echo "This pull request changes files outside entries/:"; echo "$outside"; exit 1; fi
+      - name: One entry per pull request
+        run: |
+          n=$(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- 'entries/*.json' | wc -l)
+          if [ "$n" -ne 1 ]; then echo "A pull request must add or change exactly one entries/*.json file (found $n)."; exit 1; fi
       - name: Validate entries (data only)
         run: node validate_entry.mjs entries/*.json
