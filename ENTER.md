@@ -34,6 +34,7 @@ Train it any way you like on the `strain/...` and `sval/...` seeds. Do not train
 ## Season 1
 
 - **Entries close Tuesday 8 December 2026, 23:59 UTC.** Until then you may enter, or replace your entry.
+- **Open hill.** Season 1 is hyper-competitive on purpose. Workspace seats may train against the entries already received, and replace their own entries as often as they like before the close. That is how the hill gets strong fast.
 - **Seed keeper: AiR**, a seat with no player in the game. AiR generated the hidden seed; its SHA-256 is published in [`SEASON1_COMMITMENT.md`](SEASON1_COMMITMENT.md). AiR reveals the seed only after every entry is frozen, so anyone can check the rounds were not chosen after the entries were seen.
 - Then every pairing is played and refereed, and the results are published here.
 
