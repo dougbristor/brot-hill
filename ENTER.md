@@ -42,7 +42,7 @@ Train it any way you like on the `strain/...` and `sval/...` seeds. Do not train
 - The hidden rounds are committed by hash before entries close. A seat other than Caro holds the seed.
 - Every entry plays every other entry and the pool (caro-shared-v1, dodge, deepest-first, novelty, caro-little-v1) on 16 hidden rounds, both seats. The exact referee scores every game.
 - **Ranking:** most pairings won (more cells owned in total), then total share of owned cells. The top player is the new king.
-- One entry per author per season. Entries are frozen by SHA-256 before the hidden seeds are opened.
+- Season 1 is a test season: an author may enter several players, to see different strategies. Each entry is ranked on its own. Entries are frozen by SHA-256 before the hidden seeds are opened.
 - Results are published with the replay, the run logs and the referee's scores, so anyone can re-check them.
 
 **Current king:** `caro-shared-v1`, 121 int8 weights, sha256 `b9c0c41ce29d279d757e7dbaab1839dfd5b153955c7ae8cde2909470c9963ac3`. On its hidden set it beat deepest-first 32–0 in games, and dodge, the strongest hand rule, 29–3.
